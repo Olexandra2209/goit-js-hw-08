@@ -1,36 +1,44 @@
 import throttle from 'lodash.throttle';
 
-const formRef = document.querySelector('.feedback-form');
-const emailInput = document.querySelector('input[name="email"]');
-const messageInput = document.querySelector('textarea[name="message"]');
+const form = document.querySelector('.feedback-form');
+const email = document.querySelector("[name='email']");
+const message = document.querySelector("[name='message']");
 
 const STORAGE_KEY = 'feedback-form-state';
 
-formRef.addEventListener('input', throttle(handleFormInput, 500));
+window.addEventListener('load', loadFormState);
 
-function handleFormInput() {
-  const formData = {
-    email: emailInput.value,
-    message: messageInput.value.trim(),
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-}
-function formFields() {
-  const storedData = localStorage.getItem(STORAGE_KEY);
-  if (storedData) {
-    const formData = JSON.parse(storedData);
-    emailInput.value = formData.email;
-    messageInput.value = formData.message;
+email.addEventListener('input', saveFormState);
+message.addEventListener('input', saveFormState);
+
+form.addEventListener('submit', handleSubmit);
+
+const saveFormStateThrottled = throttle(saveFormState, 500);
+
+function loadFormState() {
+  const savedState = localStorage.getItem(STORAGE_KEY);
+  if (savedState) {
+    const { email: savedEmail, message: savedMessage } = JSON.parse(savedState);
+    email.value = savedEmail;
+    message.value = savedMessage;
   }
 }
 
-formRef.addEventListener('submit', handleSubmit);
+function saveFormState() {
+  const params = {
+    email: email.value,
+    message: message.value,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(params));
+}
+
 function handleSubmit(event) {
-  event.currentTarget.reset();
-
+  event.preventDefault();
+  const params = {
+    email: email.value,
+    message: message.value,
+  };
+  console.log('Form submitted:', params);
   localStorage.removeItem(STORAGE_KEY);
-  emailInput.value = '';
-  messageInput.value = '';
-
-  console.log('Form Data:', formData);
+  form.reset();
 }
